@@ -1,13 +1,14 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
-html,body {
-    overflow: -moz-scrollbars-none;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+html,
+body {
+	overflow: -moz-scrollbars-none;
+	-ms-overflow-style: none;
+	scrollbar-width: none;
 }
 
 ::-webkit-scrollbar {
-    display: none;
+	display: none;
 }

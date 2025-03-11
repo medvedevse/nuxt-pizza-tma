@@ -4,7 +4,7 @@ defineProps({
 });
 
 const data = useTgWebAppStore().dataUnsafe;
-console.log(data);
+// console.log(data);
 
 const contactData = useTgWebAppStore().contactData;
 </script>

@@ -1,12 +1,17 @@
 <script setup lang="ts">
 const { contactData } = useTgWebAppStore();
 
-const props = defineProps({
+interface IContactsProps {
 	contactData: {
-		type: Object,
-		required: true,
-	},
-});
+		first_name: string;
+		last_name: string;
+		phone_number: string;
+		user_id: string;
+		unsafe: string;
+	} | null;
+}
+
+const props = defineProps<IContactsProps>();
 
 const data = ref({
 	...props.contactData,
@@ -14,7 +19,9 @@ const data = ref({
 });
 
 const updateContactData = (data: IContactData, key: string) => {
-	contactData[key] = data[key];
+	if (contactData) {
+			contactData[key] = data[key];
+	}
 };
 </script>
 
@@ -23,9 +30,7 @@ const updateContactData = (data: IContactData, key: string) => {
 		<div class="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-6">
 			<div class="relative z-0 w-full mb-5 group">
 				<input
-					@input="
-						updateContactData(data as unknown as IContactData, 'first_name')
-					"
+					@input="updateContactData(data as IContactData, 'first_name')"
 					v-model="data.first_name"
 					type="text"
 					name="first_name"
@@ -60,7 +65,7 @@ const updateContactData = (data: IContactData, key: string) => {
 		</div>
 		<div class="relative z-0 w-full mb-5 group">
 			<input
-				@input="updateContactData(data, 'phone_number')"
+				@input="updateContactData(data as IContactData, 'phone_number')"
 				v-model="data.phone_number"
 				type="tel"
 				name="phone"
@@ -77,7 +82,7 @@ const updateContactData = (data: IContactData, key: string) => {
 		</div>
 		<div class="relative z-0 w-full mb-5 group">
 			<input
-				@input="updateContactData(data, 'address')"
+				@input="updateContactData(data as IContactData, 'address')"
 				v-model="data.address"
 				type="tel"
 				name="address"

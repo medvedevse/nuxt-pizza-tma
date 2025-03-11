@@ -2,12 +2,14 @@
 import { MinusIcon, PlusIcon } from '@heroicons/vue/24/outline';
 import type { IOrderItem } from '~/server/api/order';
 
-const props = defineProps({
-	image: String,
-	name: String,
-	price: Number,
-	order: Array<IOrderItem>,
-});
+interface IPizzaCardProps {
+	image: string,
+	name: string,
+	price: number,
+	order: IOrderItem[],
+}
+
+const props = defineProps<IPizzaCardProps>();
 
 const count = ref<number>(0);
 

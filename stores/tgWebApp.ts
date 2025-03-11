@@ -19,6 +19,7 @@ export interface IWebData {
 	initDataUnsafe: string;
 	version: string;
 	platform: string;
+	close: () => void;
 }
 
 export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
@@ -41,36 +42,32 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 
 	const initDataUnsafe = () => {
 		return new Promise(async (resolve, reject) => {
-			let dataUnsafe: string | null = null;
-
 			useWebAppCloudStorage()
 				.getStorageItem('initDataUnsafe')
 				.then(data => {
 					if (typeof data === 'string' && data === '') {
-						dataUnsafe = useWebApp().initDataUnsafe;
+						dataUnsafe.value = useWebApp().initDataUnsafe;
 						useWebAppCloudStorage().setStorageItem(
 							'initDataUnsafe',
-							JSON.stringify(dataUnsafe)
+							JSON.stringify(dataUnsafe.value)
 						);
 					} else {
-						dataUnsafe = data && JSON.parse(data);
+						dataUnsafe.value = data && JSON.parse(data);
 					}
-					resolve(dataUnsafe);
+					resolve(dataUnsafe.value);
 				});
 		});
 	};
 
 	const initContactData = () => {
 		return new Promise(async (resolve, reject) => {
-			let contactData: IContactData | null = null;
-
 			useWebAppCloudStorage()
 				.getStorageItem('contactData')
 				.then(data => {
 					if (typeof data === 'string' && data === '') {
 						useWebAppRequests().requestContact((ok, response) => {
 							if (ok) {
-								contactData = {
+								contactData.value = {
 									first_name: response.responseUnsafe.contact.first_name,
 									last_name: response.responseUnsafe.contact.last_name,
 									phone_number:
@@ -81,21 +78,21 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 								};
 								useWebAppCloudStorage().setStorageItem(
 									'contactData',
-									JSON.stringify(contactData)
+									JSON.stringify(contactData.value)
 								);
 							} else {
 								useWebAppPopup().showAlert('Контакт не получен');
 							}
 						});
 					} else {
-						contactData = data && JSON.parse(data);
+						contactData.value = data && JSON.parse(data);
 					}
-					resolve(contactData);
+					resolve(contactData.value);
 				});
 		});
 	};
 
-	const authenticateBiometric = () => {
+	const authenticateBiometric = async () => {
 		return new Promise((resolve, reject) => {
 			if (
 				webAppData.value != null &&
@@ -162,5 +159,6 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 		init,
 		initContactData,
 		initDataUnsafe,
+		webAppData,
 	};
 });

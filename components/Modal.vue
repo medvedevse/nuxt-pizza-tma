@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { XCircleIcon } from '@heroicons/vue/24/outline/index.js';
-defineProps({
-	show: Boolean,
-	title: String,
-});
+
+interface IModalProps {
+	show: boolean;
+	title: string;
+}
+
+defineProps<IModalProps>();
 </script>
 <template>
 	<div

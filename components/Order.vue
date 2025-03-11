@@ -1,16 +1,12 @@
 <script setup lang="ts">
 import type { IOrderItem } from '~/server/api/order';
 
-defineProps({
-	order: {
-		type: Array,
-		required: true,
-	},
-	total: {
-		type: Number,
-		required: true,
-	},
-});
+interface IOrderProps {
+	order: IOrderItem[];
+	total: number;
+}
+
+defineProps<IOrderProps>();
 </script>
 
 <template>
@@ -18,7 +14,7 @@ defineProps({
 		<div>
 			<ul>
 				<li
-					v-for="(pizza, index) in order as IOrderItem[]"
+					v-for="(pizza, index) in order"
 					:key="index"
 					class="mb-2 text-gray-900 dark:text-gray-100"
 				>
