@@ -1,13 +1,6 @@
 <script setup lang="ts">
 import { MinusIcon, PlusIcon } from '@heroicons/vue/24/outline';
-import type { IOrderItem } from '~/server/api/order';
-
-interface IPizzaCardProps {
-	image: string,
-	name: string,
-	price: number,
-	order: IOrderItem[],
-}
+import type { IPizzaCardProps } from '~/types/types';
 
 const props = defineProps<IPizzaCardProps>();
 
@@ -41,7 +34,7 @@ watch(
 </script>
 <template>
 	<div
-		class="border rounded-lg flex flex-col items-center bg-white dark:bg-gray-800 dark:border-gray-700"
+		class="border rounded-lg flex flex-col items-center bg-white dark:bg-gray-700 dark:border-gray-500"
 	>
 		<img
 			:src="image"
@@ -52,12 +45,12 @@ watch(
 		<h2 class="text-lg font-bold mb-2 text-black dark:text-white">
 			{{ name }}
 		</h2>
-		<p class="text-gray-700 dark:text-gray-300 mb-4">{{ price }} ₽</p>
+		<p class="text-gray-700 dark:text-gray-100 mb-4">{{ price }} ₽</p>
 		<div class="flex items-center mb-4">
 			<button
 				v-if="count > 0"
 				@click="decrement"
-				class="bg-red-500 text-white rounded md:px-4 px-5 py-1"
+				class="bg-red-400 text-white rounded md:px-4 px-5 py-1"
 			>
 				<MinusIcon class="size-5" />
 			</button>

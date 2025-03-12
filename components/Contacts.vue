@@ -1,26 +1,18 @@
 <script setup lang="ts">
-const { contactData } = useTgWebAppStore();
+import type { IContactData, IContactsProps } from '~/types/types';
 
-interface IContactsProps {
-	contactData: {
-		first_name: string;
-		last_name: string;
-		phone_number: string;
-		user_id: string;
-		unsafe: string;
-	} | null;
-}
+const { contactData } = useTgWebAppStore();
 
 const props = defineProps<IContactsProps>();
 
-const data = ref({
+const data = ref<IContactData>({
 	...props.contactData,
 	address: '',
 });
 
-const updateContactData = (data: IContactData, key: string) => {
+const updateContactData = (data: IContactData, key: keyof IContactData) => {
 	if (contactData) {
-			contactData[key] = data[key];
+		contactData[key] = data[key] as string;
 	}
 };
 </script>

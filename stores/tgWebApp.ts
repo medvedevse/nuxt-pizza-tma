@@ -5,27 +5,18 @@ import {
 	useWebAppRequests,
 	useWebAppBiometricManager,
 } from 'vue-tg';
-
-export interface IContactData {
-	first_name: string;
-	last_name: string;
-	phone_number: string;
-	user_id: string;
-	unsafe: string;
-}
-
-export interface IWebData {
-	initData: string;
-	initDataUnsafe: string;
-	version: string;
-	platform: string;
-	close: () => void;
-}
+import type { IContactData, IWebData } from '~/types/types';
 
 export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 	const webAppData = ref<IWebData | null>(null);
 	const dataUnsafe = ref<string | null>(null);
-	const contactData = ref<IContactData | null>(null);
+	const contactData = ref<IContactData>({
+		first_name: '',
+		last_name: '',
+		phone_number: '',
+		user_id: '',
+		unsafe: '',
+	});
 
 	const init = () => {
 		return new Promise(async (resolve, reject) => {
@@ -67,6 +58,7 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 					if (typeof data === 'string' && data === '') {
 						useWebAppRequests().requestContact((ok, response) => {
 							if (ok) {
+								console.log(response.responseUnsafe.contact);
 								contactData.value = {
 									first_name: response.responseUnsafe.contact.first_name,
 									last_name: response.responseUnsafe.contact.last_name,

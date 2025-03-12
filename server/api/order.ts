@@ -1,11 +1,6 @@
 import crypto from 'crypto';
 import { NuxtError } from 'nuxt/app';
-
-export interface IOrderItem {
-	name: string;
-	count: number;
-	price: number;
-}
+import { IOrderItem } from '~/types/types';
 
 export default defineEventHandler(async event => {
 	const body = await readBody(event);
@@ -42,7 +37,7 @@ export default defineEventHandler(async event => {
 		});
 	}
 
-	let message = `<b>${
+	let message: string = `<b>${
 		contact.first_name.trim() + ' ' + contact.last_name.trim()
 	}</b>, спасибо за заказ! Мы уже начали его приготовление.\n\n`;
 	message += `Привезем по адресу: <b>${contact.address ?? null}</b>\n`;

@@ -1,12 +1,9 @@
 <script setup lang="ts">
-defineProps({
-	darkMode: Boolean,
-});
+import type { IHeaderProps } from '~/types/types';
 
-const data = useTgWebAppStore().dataUnsafe;
-// console.log(data);
+defineProps<IHeaderProps>();
 
-const contactData = useTgWebAppStore().contactData;
+const { contactData } = useTgWebAppStore();
 </script>
 <template>
 	<div class="flex justify-between items-center mb-4">

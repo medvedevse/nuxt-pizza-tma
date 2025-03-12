@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import { XCircleIcon } from '@heroicons/vue/24/outline/index.js';
-
-interface IModalProps {
-	show: boolean;
-	title: string;
-}
+import type { IModalProps } from '~/types/types';
 
 defineProps<IModalProps>();
 </script>

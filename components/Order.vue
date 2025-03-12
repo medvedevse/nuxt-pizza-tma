@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import type { IOrderItem } from '~/server/api/order';
-
-interface IOrderProps {
-	order: IOrderItem[];
-	total: number;
-}
+import type { IOrderProps } from '~/types/types';
 
 defineProps<IOrderProps>();
 </script>
@@ -15,7 +10,7 @@ defineProps<IOrderProps>();
 			<ul>
 				<li
 					v-for="(pizza, index) in order"
-					:key="index"
+					:key="pizza.id"
 					class="mb-2 text-gray-900 dark:text-gray-100"
 				>
 					{{ pizza.name }} - {{ pizza.price }} ₽ ({{ pizza.count }})
