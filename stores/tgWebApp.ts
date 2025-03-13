@@ -5,7 +5,7 @@ import {
 	useWebAppRequests,
 	useWebAppBiometricManager,
 } from 'vue-tg';
-import type { IContactData, IWebData } from '~/types/types';
+import type { IContactData, IOrderItem, IPizza, IWebData } from '~/types/types';
 
 export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 	const webAppData = ref<IWebData | null>(null);
@@ -18,11 +18,18 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 		unsafe: '',
 	});
 
+	const darkMode = ref<boolean>(true);
+	const showOrder = ref<boolean>(false);
+	const order = ref<IOrderItem[]>([]);
+	const orderStep = ref<number>(0);
+	const orderNumber = ref<number>(0);
+	const isDisabled = ref<boolean>(true);
+
 	const init = () => {
 		return new Promise(async (resolve, reject) => {
 			webAppData.value = useWebApp();
 
-			if (webAppData.value.version > '6.0') {
+			if (webAppData.value && webAppData.value.version > '6.0') {
 				dataUnsafe.value = (await initDataUnsafe()) as string;
 				contactData.value = (await initContactData()) as IContactData;
 			}
@@ -58,7 +65,6 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 					if (typeof data === 'string' && data === '') {
 						useWebAppRequests().requestContact((ok, response) => {
 							if (ok) {
-								console.log(response.responseUnsafe.contact);
 								contactData.value = {
 									first_name: response.responseUnsafe.contact.first_name,
 									last_name: response.responseUnsafe.contact.last_name,
@@ -144,6 +150,98 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 			}
 		});
 	};
+
+	const orderProcess = async (step: number) => {
+		step++;
+		switch (step) {
+			case 1:
+				openOrderModal();
+				orderStep.value++;
+				break;
+			case 2:
+				orderStep.value++;
+				break;
+			case 3:
+				orderStep.value++;
+				orderNumber.value++;
+				const res = (await authenticateBiometric()) as Response;
+				if (res.ok) {
+					await useFetch('/api/order', {
+						method: 'POST',
+						body: {
+							order: order.value,
+							total: total.value,
+							contactData: contactData.value,
+							unsafeData: contactData.value && contactData.value.unsafe,
+						},
+					});
+
+					webAppData.value && webAppData.value.close();
+					orderNow();
+				}
+				break;
+			default:
+				break;
+		}
+	};
+
+	const toggleDarkMode = () => {
+		darkMode.value = !darkMode.value;
+	};
+
+	const openOrderModal = () => {
+		showOrder.value = true;
+		disableScroll();
+	};
+
+	const orderNow = () => {
+		alert('Заказ оформлен');
+	};
+
+	const closeModal = () => {
+		showOrder.value = false;
+		orderStep.value = 0;
+		enableScroll();
+	};
+
+	const total = computed(() => {
+		return order.value.reduce(
+			(total, pizza) => total + pizza.price * pizza.count,
+			0
+		);
+	});
+	const updateOrder = (pizza: IPizza) => {
+		const existingPizza = order.value.find(p => p.name === pizza.name);
+		if (pizza.action === 'add') {
+			if (existingPizza) {
+				existingPizza.count++;
+			} else {
+				order.value.push({ ...pizza, count: 1 });
+			}
+		} else if (pizza.action === 'remove') {
+			if (existingPizza && existingPizza.count > 1) {
+				existingPizza.count--;
+			} else {
+				order.value = order.value.filter(p => p.name !== pizza.name);
+			}
+		}
+	};
+
+	const disableScroll = () => {
+		document.body.classList.add('overflow-hidden');
+	};
+
+	const enableScroll = () => {
+		document.body.classList.remove('overflow-hidden');
+	};
+
+	const mainButtonText = computed(() =>
+		order.value.length > 0 && !showOrder.value ? 'Заказать' : 'Оформить'
+	);
+
+	const updateContactData = (data: IContactData, key: keyof IContactData) => {
+		contactData.value[key] = data[key] as string;
+	};
 	return {
 		authenticateBiometric,
 		contactData,
@@ -152,5 +250,19 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 		initContactData,
 		initDataUnsafe,
 		webAppData,
+		darkMode,
+		toggleDarkMode,
+		openOrderModal,
+		updateOrder,
+		order,
+		showOrder,
+		orderStep,
+		closeModal,
+		total,
+		updateContactData,
+		mainButtonText,
+		orderProcess,
+		orderNumber,
+		isDisabled,
 	};
 });

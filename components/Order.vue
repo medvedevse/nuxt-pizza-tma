@@ -9,11 +9,11 @@ defineProps<IOrderProps>();
 		<div>
 			<ul>
 				<li
-					v-for="(pizza, index) in order"
+					v-for="pizza in order"
 					:key="pizza.id"
 					class="mb-2 text-gray-900 dark:text-gray-100"
 				>
-					{{ pizza.name }} - {{ pizza.price }} ₽ ({{ pizza.count }})
+					{{ pizza.name }} - {{ pizza.price }} ₽ ({{ pizza.count }} шт)
 				</li>
 			</ul>
 		</div>

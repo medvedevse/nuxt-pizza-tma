@@ -1,108 +1,25 @@
 <script setup lang="ts">
-import { MainButton } from 'vue-tg';
-import { ClosingConfirmation } from 'vue-tg';
+import { MainButton, ClosingConfirmation } from 'vue-tg';
 import { pizzas } from '~/data/mock';
-import type { IContactData, IOrderItem, IPizza } from '~/types/types';
 
-const darkMode = ref<boolean>(true);
-const showOrder = ref<boolean>(false);
-const order = ref<IOrderItem[]>([]);
-const orderStep = ref<number>(0);
-
-const { contactData, webAppData, authenticateBiometric } = useTgWebAppStore();
-
-const orderProcess = async (step: number) => {
-	step++;
-	switch (step) {
-		case 1:
-			openOrderModal();
-			orderStep.value++;
-			break;
-		case 2:
-			orderStep.value++;
-			break;
-		case 3:
-			const res = (await authenticateBiometric()) as Response;
-			if (res.ok) {
-				await $fetch('/api/order', {
-					method: 'POST',
-					body: {
-						order: order.value,
-						total: total.value,
-						contactData: contactData,
-						unsafeData: contactData && contactData.unsafe,
-					},
-				});
-
-				webAppData && webAppData.close();
-			}
-
-		default:
-			break;
-	}
-};
-
-const updateContactData = (data: IContactData) => {
-	console.log(data);
-};
-
-const toggleDarkMode = () => {
-	darkMode.value = !darkMode.value;
-};
-
-const openOrderModal = () => {
-	showOrder.value = true;
-	disableScroll();
-};
-
-const orderNow = async () => {
-	alert('Заказ оформлен');
-};
-
-const closeModal = () => {
-	showOrder.value = false;
-	orderStep.value = 0;
-	enableScroll();
-};
-
-const total = computed(() => {
-	return order.value.reduce(
-		(total, pizza) => total + pizza.price * pizza.count,
-		0
-	);
-});
-const updateOrder = (pizza: IPizza) => {
-	const existingPizza = order.value.find(p => p.name === pizza.name);
-	if (pizza.action === 'add') {
-		if (existingPizza) {
-			existingPizza.count++;
-		} else {
-			order.value.push({ ...pizza, count: 1 });
-		}
-	} else if (pizza.action === 'remove') {
-		if (existingPizza && existingPizza.count > 1) {
-			existingPizza.count--;
-		} else {
-			order.value = order.value.filter(p => p.name !== pizza.name);
-		}
-	}
-};
-
-const disableScroll = () => {
-	document.body.classList.add('overflow-hidden');
-};
-
-const enableScroll = () => {
-	document.body.classList.remove('overflow-hidden');
-};
-
-const mainButtonText = computed(() => {
-	if (order.value.length > 0 && !showOrder.value) {
-		return 'Заказать';
-	} else {
-		return 'Оформить';
-	}
-});
+const {
+	toggleDarkMode,
+	openOrderModal,
+	updateOrder,
+	closeModal,
+	updateContactData,
+	orderProcess,
+} = useTgWebAppStore();
+const {
+	contactData,
+	darkMode,
+	order,
+	showOrder,
+	orderStep,
+	total,
+	mainButtonText,
+	isDisabled,
+} = storeToRefs(useTgWebAppStore());
 </script>
 <template>
 	<div :class="darkMode ? 'dark' : ''">
@@ -117,8 +34,8 @@ const mainButtonText = computed(() => {
 				class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6"
 			>
 				<PizzaCard
-					v-for="(pizza, index) in pizzas"
-					:key="index"
+					v-for="pizza in pizzas"
+					:key="pizza.id"
 					:image="pizza.image"
 					:name="pizza.name"
 					:price="pizza.price"
@@ -129,7 +46,7 @@ const mainButtonText = computed(() => {
 
 			<Modal
 				:show="showOrder"
-				title="Заказ"
+				:title="orderStep === 3 ? `Заказ оформлен!` : `Заказ`"
 				@close="closeModal"
 			>
 				<Order
@@ -140,15 +57,16 @@ const mainButtonText = computed(() => {
 				<Contacts
 					v-if="orderStep === 2"
 					:contactData="contactData"
-					@updateContactData="updateContactData"
 				/>
+				<ThankYou v-if="orderStep === 3" />
 			</Modal>
 		</div>
 		<MainButton
 			:text="mainButtonText"
 			@click="orderProcess(orderStep)"
-			:visible="order.length > 0"
+			:visible="order.length > 0 && orderStep !== 3"
 			:color="darkMode ? `#5f9ea0` : `#008b8b`"
+			:disabled="orderStep === 2 && isDisabled"
 		/>
 		<ClosingConfirmation />
 	</div>

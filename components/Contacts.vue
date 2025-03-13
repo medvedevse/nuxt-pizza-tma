@@ -1,20 +1,33 @@
 <script setup lang="ts">
+import { useWebAppCloudStorage } from 'vue-tg';
 import type { IContactData, IContactsProps } from '~/types/types';
 
-const { contactData } = useTgWebAppStore();
+const { updateContactData } = useTgWebAppStore();
+const { isDisabled } = storeToRefs(useTgWebAppStore());
 
 const props = defineProps<IContactsProps>();
 
+const savedAddress = ref<string | null>(
+	await useWebAppCloudStorage().getStorageItem('address')
+);
+
 const data = ref<IContactData>({
 	...props.contactData,
-	address: '',
+	address: savedAddress.value ? savedAddress.value : '',
 });
 
-const updateContactData = (data: IContactData, key: keyof IContactData) => {
-	if (contactData) {
-		contactData[key] = data[key] as string;
-	}
+const validateFields = () => {
+	!data.value.address ||
+	!data.value.first_name ||
+	!data.value.last_name ||
+	!data.value.phone_number
+		? (isDisabled.value = true)
+		: (isDisabled.value = false);
+	watch(isDisabled, newVal => console.log(newVal), { immediate: true });
 };
+
+const saveAddress = () =>
+	useWebAppCloudStorage().setStorageItem('address', data.value.address || '');
 </script>
 
 <template>
@@ -22,7 +35,10 @@ const updateContactData = (data: IContactData, key: keyof IContactData) => {
 		<div class="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-6">
 			<div class="relative z-0 w-full mb-5 group">
 				<input
-					@input="updateContactData(data as IContactData, 'first_name')"
+					@input="
+						updateContactData(data as IContactData, 'first_name');
+						validateFields();
+					"
 					v-model="data.first_name"
 					type="text"
 					name="first_name"
@@ -39,7 +55,10 @@ const updateContactData = (data: IContactData, key: keyof IContactData) => {
 			</div>
 			<div class="relative z-0 w-full mb-5 group">
 				<input
-					@input="updateContactData(data as IContactData, 'last_name')"
+					@input="
+						updateContactData(data as IContactData, 'last_name');
+						validateFields();
+					"
 					v-model="data.last_name"
 					type="text"
 					name="last_name"
@@ -57,7 +76,10 @@ const updateContactData = (data: IContactData, key: keyof IContactData) => {
 		</div>
 		<div class="relative z-0 w-full mb-5 group">
 			<input
-				@input="updateContactData(data as IContactData, 'phone_number')"
+				@input="
+					updateContactData(data as IContactData, 'phone_number');
+					validateFields();
+				"
 				v-model="data.phone_number"
 				type="tel"
 				name="phone"
@@ -74,7 +96,11 @@ const updateContactData = (data: IContactData, key: keyof IContactData) => {
 		</div>
 		<div class="relative z-0 w-full mb-5 group">
 			<input
-				@input="updateContactData(data as IContactData, 'address')"
+				@input="
+					updateContactData(data as IContactData, 'address');
+					validateFields();
+					saveAddress();
+				"
 				v-model="data.address"
 				type="tel"
 				name="address"
