@@ -1,8 +1,16 @@
+export type WebApp = typeof import('vue-tg').useWebApp;
+export type CloudStorage = typeof import('vue-tg').useWebAppCloudStorage;
+export type Popup = typeof import('vue-tg').useWebAppPopup;
+export type Requests = typeof import('vue-tg').useWebAppRequests;
+export type BiometricManager =
+	typeof import('vue-tg').useWebAppBiometricManager;
+export type FullScreen = typeof import('vue-tg').useWebAppHapticFeedback;
+
 export interface IContactsProps {
 	contactData: IContactData;
 }
 
-export interface IHeaderProps {
+export interface IHeaderProps extends IContactsProps {
 	darkMode: boolean;
 }
 
@@ -53,4 +61,18 @@ export interface IWebData {
 	version: string;
 	platform: string;
 	close: () => void;
+}
+
+export interface IOrderBody {
+	order: IOrderItem[];
+	total: number;
+	contactData: IContactData;
+	unsafeData: string;
+}
+
+export interface IBiometricResponse {
+	ok: boolean;
+	token?: string;
+	deviceId?: string;
+	message?: string;
 }

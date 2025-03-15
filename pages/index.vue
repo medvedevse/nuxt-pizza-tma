@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { MainButton, ClosingConfirmation } from 'vue-tg';
 import { pizzas } from '~/data/mock';
+
+const { MainButton, ClosingConfirmation, useWebAppTheme, useWebApp } =
+	await import('vue-tg');
 
 const {
 	toggleDarkMode,
 	openOrderModal,
 	updateOrder,
 	closeModal,
-	updateContactData,
 	orderProcess,
 } = useTgWebAppStore();
 const {
@@ -19,7 +20,11 @@ const {
 	total,
 	mainButtonText,
 	isDisabled,
+	isBiometricSuccess,
 } = storeToRefs(useTgWebAppStore());
+
+const theme = useWebAppTheme().colorScheme;
+darkMode.value = theme.value === 'dark' ? true : false;
 </script>
 <template>
 	<div :class="darkMode ? 'dark' : ''">
@@ -28,6 +33,7 @@ const {
 				:darkMode="darkMode"
 				@toggle-dark-mode="toggleDarkMode"
 				@open-modal="openOrderModal"
+				:contactData="contactData"
 			/>
 
 			<div
@@ -39,14 +45,14 @@ const {
 					:image="pizza.image"
 					:name="pizza.name"
 					:price="pizza.price"
-					@update-order="updateOrder"
 					:order="order"
+					@update-order="updateOrder"
 				/>
 			</div>
 
 			<Modal
 				:show="showOrder"
-				:title="orderStep === 3 ? `Заказ оформлен!` : `Заказ`"
+				:title="orderStep === 3 ? `Оформление` : `Заказ`"
 				@close="closeModal"
 			>
 				<Order
@@ -57,17 +63,21 @@ const {
 				<Contacts
 					v-if="orderStep === 2"
 					:contactData="contactData"
+					:isDisabled="isDisabled"
 				/>
-				<ThankYou v-if="orderStep === 3" />
+				<AuthBanner v-if="orderStep === 3" />
+				<ThankYou v-if="isBiometricSuccess && orderStep === 4" />
 			</Modal>
 		</div>
 		<MainButton
 			:text="mainButtonText"
 			@click="orderProcess(orderStep)"
-			:visible="order.length > 0 && orderStep !== 3"
+			:visible="order.length > 0 && orderStep !== 4"
 			:color="darkMode ? `#5f9ea0` : `#008b8b`"
+			textColor="#f0ffff"
 			:disabled="orderStep === 2 && isDisabled"
 		/>
+		<BiometricManager v-if="!isBiometricSuccess && orderStep === 3" />
 		<ClosingConfirmation />
 	</div>
 </template>

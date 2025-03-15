@@ -17,6 +17,7 @@
 		"nuxt": "^3.16.0",
 		"pinia": "^2.2.1",
 		"vue": "latest",
+		"vue-dadata": "^3.0.0-beta.13",
 		"vue-tg": "^0.8.0"
 	},
 	"devDependencies": {

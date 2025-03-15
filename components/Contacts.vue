@@ -1,19 +1,17 @@
 <script setup lang="ts">
-import { useWebAppCloudStorage } from 'vue-tg';
 import type { IContactData, IContactsProps } from '~/types/types';
+import { VueDadata } from 'vue-dadata';
+import 'vue-dadata/dist/style.css';
 
-const { updateContactData } = useTgWebAppStore();
-const { isDisabled } = storeToRefs(useTgWebAppStore());
+const { useWebAppCloudStorage } = await import('vue-tg');
 
 const props = defineProps<IContactsProps>();
 
-const savedAddress = ref<string | null>(
-	await useWebAppCloudStorage().getStorageItem('address')
-);
+const { DADATA_TOKEN, enableScroll } = useTgWebAppStore();
+const { isDisabled, contactData } = storeToRefs(useTgWebAppStore());
 
 const data = ref<IContactData>({
 	...props.contactData,
-	address: savedAddress.value ? savedAddress.value : '',
 });
 
 const validateFields = () => {
@@ -26,8 +24,22 @@ const validateFields = () => {
 	watch(isDisabled, newVal => console.log(newVal), { immediate: true });
 };
 
-const saveAddress = () =>
-	useWebAppCloudStorage().setStorageItem('address', data.value.address || '');
+validateFields();
+
+watch(
+	data,
+	async newVal => {
+		contactData.value = newVal;
+		await useWebAppCloudStorage().setStorageItem(
+			'contactData',
+			JSON.stringify(newVal)
+		);
+	},
+	{
+		immediate: true,
+		deep: true,
+	}
+);
 </script>
 
 <template>
@@ -35,17 +47,14 @@ const saveAddress = () =>
 		<div class="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-6">
 			<div class="relative z-0 w-full mb-5 group">
 				<input
-					@input="
-						updateContactData(data as IContactData, 'first_name');
-						validateFields();
-					"
+					@input="validateFields()"
 					v-model="data.first_name"
 					type="text"
 					name="first_name"
 					id="first_name"
 					class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
 					placeholder=" "
-					required
+					:aria-required="true"
 				/>
 				<label
 					for="first_name"
@@ -55,17 +64,14 @@ const saveAddress = () =>
 			</div>
 			<div class="relative z-0 w-full mb-5 group">
 				<input
-					@input="
-						updateContactData(data as IContactData, 'last_name');
-						validateFields();
-					"
+					@input="validateFields()"
 					v-model="data.last_name"
 					type="text"
 					name="last_name"
 					id="last_name"
 					class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
 					placeholder=" "
-					required
+					:aria-required="true"
 				/>
 				<label
 					for="last_name"
@@ -76,17 +82,14 @@ const saveAddress = () =>
 		</div>
 		<div class="relative z-0 w-full mb-5 group">
 			<input
-				@input="
-					updateContactData(data as IContactData, 'phone_number');
-					validateFields();
-				"
+				@input="validateFields()"
 				v-model="data.phone_number"
 				type="tel"
 				name="phone"
 				id="phone"
 				class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
 				placeholder=" "
-				required
+				:aria-required="true"
 			/>
 			<label
 				for="phone"
@@ -94,20 +97,17 @@ const saveAddress = () =>
 				>Номер телефона</label
 			>
 		</div>
-		<div class="relative z-0 w-full mb-5 group">
-			<input
-				@input="
-					updateContactData(data as IContactData, 'address');
-					validateFields();
-					saveAddress();
-				"
+		<div class="relative z-0 w-full mb-5 group vue-truncate-html-example">
+			<VueDadata
+				:token="DADATA_TOKEN"
+				@input="validateFields()"
 				v-model="data.address"
 				type="tel"
 				name="address"
 				id="address"
-				class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+				class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer overflow:auto"
 				placeholder=" "
-				required
+				:aria-required="true"
 			/>
 			<label
 				for="address"

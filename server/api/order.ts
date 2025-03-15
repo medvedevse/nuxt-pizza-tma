@@ -1,15 +1,15 @@
 import crypto from 'crypto';
 import { NuxtError } from 'nuxt/app';
-import { IOrderItem } from '~/types/types';
+import { IOrderBody, IOrderItem } from '~/types/types';
 
 export default defineEventHandler(async event => {
-	const body = await readBody(event);
+	const body: IOrderBody = await readBody(event);
 
 	const unsafeData = new URLSearchParams(body.unsafeData);
 	const hash = unsafeData.get('hash');
 
-	const contact = body && body.contactData;
-	const order = body && body.order;
+	const contact = body.contactData;
+	const order = body.order;
 
 	const dataToCheck: string[] = [];
 
@@ -33,14 +33,14 @@ export default defineEventHandler(async event => {
 	if (hash !== _hash) {
 		throw createError({
 			statusCode: 400,
-			statusMessage: 'Неверные данные',
+			message: 'Неверные данные',
 		});
 	}
 
 	let message: string = `<b>${
 		contact.first_name.trim() + ' ' + contact.last_name.trim()
 	}</b>, спасибо за заказ! Мы уже начали его приготовление.\n\n`;
-	message += `Привезем по адресу: <b>${contact.address ?? null}</b>\n`;
+	message += `Привезем по адресу: <b>${contact.address}</b>\n`;
 	message +=
 		'<i>Отсканируйте QR код курьера через приложение Telegram для проведения оплаты и получения бонусов!</i>\n\n';
 	message += 'Мой заказ: \n';
@@ -52,14 +52,17 @@ export default defineEventHandler(async event => {
 	message += `Итого: <b>${body.total}</b> ₽ \n`;
 
 	try {
-		$fetch(`https://api.telegram.org/bot${telegramBotToken}/test/sendMessage`, {
-			method: 'POST',
-			body: {
-				parse_mode: 'html',
-				chat_id: contact.user_id,
-				text: message,
-			},
-		});
+		const res = await $fetch(
+			`https://api.telegram.org/bot${telegramBotToken}/sendMessage`,
+			{
+				method: 'POST',
+				body: {
+					parse_mode: 'html',
+					chat_id: contact.user_id,
+					text: message,
+				},
+			}
+		);
 	} catch (e) {
 		console.error((e as NuxtError).message);
 	}

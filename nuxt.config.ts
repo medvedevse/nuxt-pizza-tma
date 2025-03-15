@@ -1,7 +1,8 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+	compatibilityDate: '2024-08-08',
 	devtools: { enabled: false },
-	ssr: false,
+	ssr: true,
 
 	app: {
 		head: {
@@ -31,14 +32,9 @@ export default defineNuxtConfig({
 	},
 
 	runtimeConfig: {
-		telegramBotToken: process.env.TELEGRAM_BOT_TOKEN,
+		telegramBotToken: import.meta.env.VITE_TELEGRAM_BOT_TOKEN,
 	},
 
-	// devServer: {
-	//     host: '127.0.0.1',
-	// },
-
-	compatibilityDate: '2024-08-08',
 	modules: ['@pinia/nuxt'],
 
 	vite: {
