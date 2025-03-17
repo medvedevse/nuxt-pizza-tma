@@ -14,6 +14,7 @@
 		"@heroicons/vue": "^2.1.5",
 		"@pinia/nuxt": "^0.5.3",
 		"@vesp/nuxt-fontawesome": "^1.0.4",
+		"json-server": "^1.0.0-beta.3",
 		"nuxt": "^3.16.0",
 		"pinia": "^2.2.1",
 		"vue": "latest",

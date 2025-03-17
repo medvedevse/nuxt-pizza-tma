@@ -37,6 +37,10 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 		unsafe: '',
 	});
 
+	const pizzas = ref<IPizza[]>();
+	const isLoading = ref<boolean>(false);
+	const isError = ref<boolean>(false);
+
 	const darkMode = ref<boolean>(false);
 	const showOrder = ref<boolean>(false);
 	const order = ref<IOrderItem[]>([]);
@@ -128,11 +132,46 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 		return contactData.value;
 	};
 
+	const getProductsData = async () => {
+		try {
+			isError.value = false;
+			isLoading.value = true;
+			await new Promise(resolve => {
+				setTimeout(() => {
+					console.log('Готовим пиццу)');
+					resolve(true);
+				}, 5000);
+			});
+			const { data } = await useLazyFetch<IPizza[]>('/api/pizza', {
+				cache: 'no-cache',
+			});
+			pizzas.value = data.value as IPizza[];
+		} catch (err) {
+			isLoading.value = false;
+			isError.value = true;
+			popup().showAlert(
+				`Что то пошло не так:\n\n` + (err as NuxtError).message
+			);
+		} finally {
+			isLoading.value = false;
+		}
+	};
+
 	const init = async () => {
 		await ssrHelper();
+
 		theme.value = useTheme().colorScheme.value;
 		webAppData.value = await webApp();
 		console.log('webAppData', webAppData.value);
+
+		const savedBioSuccess = await cloudStorage().getStorageItem(
+			'biometricSuccess'
+		);
+		isBiometricSuccess.value = savedBioSuccess
+			? Boolean(savedBioSuccess)
+			: false;
+
+		await getProductsData();
 
 		if (webAppData.value && webAppData.value.version > '6.0') {
 			dataUnsafe.value = await initDataUnsafe();
@@ -187,6 +226,10 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 				if (!isBiometricSupported.value) {
 					popup().showAlert('Биометрия недоступна на устройстве');
 					isBiometricSuccess.value = true;
+					await cloudStorage().setStorageItem(
+						'biometricSuccess',
+						JSON.stringify(isBiometricSuccess.value)
+					);
 					return { ok: true, message: 'Биометрия недоступна на устройстве' };
 				}
 
@@ -202,6 +245,10 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 					if (!accessResult.granted) {
 						popup().showAlert('Доступ к биометрии не предоставлен');
 						isBiometricSuccess.value = false;
+						await cloudStorage().setStorageItem(
+							'biometricSuccess',
+							JSON.stringify(isBiometricSuccess.value)
+						);
 						return { ok: false, message: 'Доступ к биометрии не предоставлен' };
 					}
 				}
@@ -220,6 +267,10 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 					const newToken = Math.random().toString(36).substring(2, 15);
 					await biometricManager().updateBiometricToken(newToken);
 					isBiometricSuccess.value = true;
+					await cloudStorage().setStorageItem(
+						'biometricSuccess',
+						JSON.stringify(isBiometricSuccess.value)
+					);
 					return {
 						ok: true,
 						token: newToken,
@@ -228,6 +279,10 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 					};
 				}
 				isBiometricSuccess.value = true;
+				await cloudStorage().setStorageItem(
+					'biometricSuccess',
+					JSON.stringify(isBiometricSuccess.value)
+				);
 				return {
 					ok: true,
 					deviceId: biometricManager().biometricDeviceId.value,
@@ -237,7 +292,10 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 			} catch (error) {
 				popup().showAlert('Ошибка биометрии: ' + (error as NuxtError).message);
 				isBiometricSuccess.value = false;
-				console.error('Ошибка биометрии:', (error as NuxtError).message);
+				await cloudStorage().setStorageItem(
+					'biometricSuccess',
+					JSON.stringify(isBiometricSuccess.value)
+				);
 				return {
 					ok: false,
 					message: `Ошибка биометрии: ${(error as NuxtError).message}`,
@@ -248,12 +306,19 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 		// Если версия не поддерживает биометрию, просто пропускаем этот шаг
 		popup().showAlert('Биометрия не поддерживается в данной версии');
 		isBiometricSuccess.value = true;
+		await cloudStorage().setStorageItem(
+			'biometricSuccess',
+			JSON.stringify(isBiometricSuccess.value)
+		);
 		return { ok: true, message: 'Биометрия не поддерживается в данной версии' };
 	};
 
 	const orderProcess = async (step: number) => {
 		step++;
 		await getFullScreen().impactOccurred('heavy');
+		const savedBioSuccess = await cloudStorage().getStorageItem(
+			'biometricSuccess'
+		);
 		switch (step) {
 			case 1:
 				openOrderModal();
@@ -264,6 +329,12 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 				break;
 			case 3:
 				orderStep.value++;
+				setTimeout(() => {
+					if (isBiometricSuccess.value) {
+						orderProcess(orderStep.value);
+						step++;
+					}
+				}, 3000);
 				break;
 			case 4:
 				if (
@@ -432,5 +503,8 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 		theme,
 		onBioAuth,
 		validateFields,
+		pizzas,
+		isLoading,
+		isError,
 	};
 });

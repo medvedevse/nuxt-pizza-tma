@@ -39,7 +39,7 @@ watch(
 		<img
 			:src="image"
 			alt="Pizza"
-			class="w-full object-cover mb-4 rounded-t-lg"
+			class="w-full object-cover mb-4 rounded-t-lg min-h-[180px]"
 			loading="lazy"
 		/>
 		<h2 class="text-lg font-bold mb-2 text-black dark:text-white">
@@ -50,7 +50,7 @@ watch(
 			<button
 				v-if="count > 0"
 				@click="decrement"
-				class="bg-red-400 text-white rounded md:px-4 px-5 py-1"
+				class="bg-red-400 text-white rounded md:px-4 px-3 py-1"
 			>
 				<MinusIcon class="size-5" />
 			</button>
@@ -61,7 +61,7 @@ watch(
 			>
 			<button
 				@click="increment"
-				class="bg-tg-light text-white rounded md:px-4 px-5 py-1"
+				class="bg-green-600 text-white rounded md:px-4 px-3 py-1"
 			>
 				<PlusIcon class="size-5" />
 			</button>

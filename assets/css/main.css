@@ -4,6 +4,10 @@
 
 html,
 body {
+	min-height: 100dvh;
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
 	overflow: -moz-scrollbars-none;
 	-ms-overflow-style: none;
 	scrollbar-width: none;

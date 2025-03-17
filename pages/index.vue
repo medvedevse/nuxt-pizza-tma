@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { pizzas } from '~/data/mock';
-
 const { MainButton, ClosingConfirmation, ScanQr } = await import('vue-tg');
 
 const {
@@ -24,13 +22,22 @@ const {
 	isBiometricSuccess,
 	qrFlag,
 	theme,
+	pizzas,
+	isLoading,
+	isError,
 } = storeToRefs(useTgWebAppStore());
 
 darkMode.value = theme.value === 'dark' ? true : false;
 </script>
 <template>
-	<div :class="darkMode ? 'dark' : ''">
-		<div class="p-4 bg-tg-background dark:bg-gray-600 min-h-screen">
+	<div
+		:class="(darkMode ? 'dark' : '') || (isLoading ? 'overflow-hidden' : '')"
+	>
+		<DataLoader v-if="isLoading" />
+		<div
+			v-else
+			class="p-4 bg-tg-background dark:bg-gray-600 min-h-screen"
+		>
 			<Header
 				:darkMode="darkMode"
 				@use-qr="handleUseQr"
@@ -38,7 +45,6 @@ darkMode.value = theme.value === 'dark' ? true : false;
 				@open-modal="openOrderModal"
 				:contactData="contactData"
 			/>
-
 			<div
 				class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6"
 			>
