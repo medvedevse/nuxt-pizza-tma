@@ -9,8 +9,17 @@ defineProps<IHeaderProps>();
 			{{ contactData.first_name }} {{ contactData.last_name }}
 			{{ contactData.phone_number }}
 		</span>
-		<button @click="$emit('toggle-dark-mode')">
-			{{ darkMode ? '🌝' : '🌚' }}
-		</button>
+		<div class="flex gap-2">
+			<button @click="$emit('use-qr')">
+				<img
+					src="https://cdn1.iconfinder.com/data/icons/buno-ecommerce-shopping-2/32/qrcode_qr_code_reader_scan-64.png"
+					alt=""
+					width="30"
+				/>
+			</button>
+			<button @click="$emit('toggle-dark-mode')">
+				{{ darkMode ? '🌝' : '🌚' }}
+			</button>
+		</div>
 	</div>
 </template>

@@ -7,33 +7,24 @@ const { useWebAppCloudStorage } = await import('vue-tg');
 
 const props = defineProps<IContactsProps>();
 
-const { DADATA_TOKEN, enableScroll } = useTgWebAppStore();
+const { DADATA_TOKEN, validateFields } = useTgWebAppStore();
 const { isDisabled, contactData } = storeToRefs(useTgWebAppStore());
 
 const data = ref<IContactData>({
 	...props.contactData,
 });
 
-const validateFields = () => {
-	!data.value.address ||
-	!data.value.first_name ||
-	!data.value.last_name ||
-	!data.value.phone_number
-		? (isDisabled.value = true)
-		: (isDisabled.value = false);
-	watch(isDisabled, newVal => console.log(newVal), { immediate: true });
-};
-
-validateFields();
-
 watch(
 	data,
 	async newVal => {
-		contactData.value = newVal;
-		await useWebAppCloudStorage().setStorageItem(
-			'contactData',
-			JSON.stringify(newVal)
-		);
+		const res = validateFields(newVal);
+		if (res) {
+			contactData.value = newVal;
+			await useWebAppCloudStorage().setStorageItem(
+				'contactData',
+				JSON.stringify(newVal)
+			);
+		}
 	},
 	{
 		immediate: true,
@@ -47,7 +38,6 @@ watch(
 		<div class="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-6">
 			<div class="relative z-0 w-full mb-5 group">
 				<input
-					@input="validateFields()"
 					v-model="data.first_name"
 					type="text"
 					name="first_name"
@@ -64,7 +54,6 @@ watch(
 			</div>
 			<div class="relative z-0 w-full mb-5 group">
 				<input
-					@input="validateFields()"
 					v-model="data.last_name"
 					type="text"
 					name="last_name"
@@ -82,7 +71,6 @@ watch(
 		</div>
 		<div class="relative z-0 w-full mb-5 group">
 			<input
-				@input="validateFields()"
 				v-model="data.phone_number"
 				type="tel"
 				name="phone"
@@ -100,9 +88,7 @@ watch(
 		<div class="relative z-0 w-full mb-5 group vue-truncate-html-example">
 			<VueDadata
 				:token="DADATA_TOKEN"
-				@input="validateFields()"
 				v-model="data.address"
-				type="tel"
 				name="address"
 				id="address"
 				class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer overflow:auto"

@@ -11,6 +11,8 @@ import type {
 	FullScreen,
 	WebApp,
 	IBiometricResponse,
+	UseQR,
+	Theme,
 } from '~/types/types';
 
 export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
@@ -20,6 +22,8 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 	let requests: Requests;
 	let biometricManager: BiometricManager;
 	let getFullScreen: FullScreen;
+	let useQr: UseQR;
+	let useTheme: Theme;
 
 	const DADATA_TOKEN = import.meta.env.VITE_APP_DADATA_API_KEY;
 
@@ -39,6 +43,8 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 	const orderStep = ref<number>(0);
 	const orderNumber = ref<number>(0);
 	const isDisabled = ref<boolean>(true);
+	const qrFlag = ref<boolean>(false);
+	const theme = ref<'light' | 'dark'>();
 
 	const isBiometricSuccess = ref<boolean>(false);
 	const isAccessBiometricGranted = ref<boolean>(false);
@@ -54,6 +60,8 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 				useWebAppRequests,
 				useWebAppBiometricManager,
 				useWebAppHapticFeedback,
+				useWebAppQrScanner,
+				useWebAppTheme,
 			} = await import('vue-tg');
 			webApp = useWebApp;
 			cloudStorage = useWebAppCloudStorage;
@@ -61,6 +69,8 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 			requests = useWebAppRequests;
 			biometricManager = useWebAppBiometricManager;
 			getFullScreen = useWebAppHapticFeedback;
+			useQr = useWebAppQrScanner;
+			useTheme = useWebAppTheme;
 		}
 	};
 
@@ -82,7 +92,6 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 		const data = await cloudStorage().getStorageItem('contactData');
 		if (typeof data === 'string' && data === '') {
 			await requests().requestContact(async (ok, response) => {
-				alert('initContactData: ' + ok);
 				if (ok) {
 					contactData.value = {
 						first_name:
@@ -121,8 +130,10 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 
 	const init = async () => {
 		await ssrHelper();
+		theme.value = useTheme().colorScheme.value;
 		webAppData.value = await webApp();
 		console.log('webAppData', webAppData.value);
+
 		if (webAppData.value && webAppData.value.version > '6.0') {
 			dataUnsafe.value = await initDataUnsafe();
 			contactData.value = await initContactData();
@@ -130,6 +141,37 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 		}
 		console.error(new Error('webAppData is undefined'));
 	};
+
+	const biometricHandler = async () => {
+		const isTokenSaved = biometricManager().isBiometricTokenSaved.value;
+
+		// Если токен отсутствует или требуется обновление
+		if (!isTokenSaved) {
+			const newToken = Math.random().toString(36).substring(2, 15);
+			await biometricManager().updateBiometricToken(newToken);
+			popup().showAlert('Биометрия пройдена, токен обновлен');
+			isBiometricSuccess.value = true;
+			return {
+				ok: true,
+				token: newToken,
+				deviceId: biometricManager().biometricDeviceId.value,
+				message: 'Биометрия пройдена, токен обновлен',
+			};
+		}
+		popup().showAlert('Биометрия пройдена');
+		isBiometricSuccess.value = true;
+		return {
+			ok: true,
+			deviceId: biometricManager().biometricDeviceId.value,
+			message: 'Биометрия пройдена',
+		};
+	};
+
+	/*@deprecated*/
+	const onBioAuth = () =>
+		biometricManager().onBiometricAuthRequested(biometricHandler, {
+			manual: false,
+		});
 
 	const authBiometric = async () => {
 		if (webAppData.value && webAppData.value.version > '7.2') {
@@ -141,8 +183,9 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 				// Проверяем, доступна ли биометрия
 				isBiometricSupported.value = await biometricManager()
 					.isBiometricAvailable.value;
+
 				if (!isBiometricSupported.value) {
-					alert('Биометрия недоступна на устройстве');
+					popup().showAlert('Биометрия недоступна на устройстве');
 					isBiometricSuccess.value = true;
 					return { ok: true, message: 'Биометрия недоступна на устройстве' };
 				}
@@ -157,40 +200,42 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 					});
 
 					if (!accessResult.granted) {
-						alert('Доступ к биометрии не предоставлен');
+						popup().showAlert('Доступ к биометрии не предоставлен');
 						isBiometricSuccess.value = false;
 						return { ok: false, message: 'Доступ к биометрии не предоставлен' };
 					}
 				}
+
+				onBioAuth();
 
 				// Аутентификация с биометрией
 				const result = await biometricManager().authenticateBiometric({
 					reason: 'Подтвердите ваш заказ',
 				});
 
+				const isTokenSaved = biometricManager().isBiometricTokenSaved.value;
+
 				// Если токен отсутствует или требуется обновление
-				if (!result.token || !biometricManager().isBiometricTokenSaved.value) {
+				if (!isTokenSaved || !result.token) {
 					const newToken = Math.random().toString(36).substring(2, 15);
 					await biometricManager().updateBiometricToken(newToken);
-					alert('Биометрия пройдена, токен обновлен');
 					isBiometricSuccess.value = true;
 					return {
 						ok: true,
 						token: newToken,
-						deviceId: await biometricManager().biometricDeviceId.value,
+						deviceId: biometricManager().biometricDeviceId.value,
 						message: 'Биометрия пройдена, токен обновлен',
 					};
 				}
-				alert('Биометрия пройдена');
 				isBiometricSuccess.value = true;
 				return {
 					ok: true,
-					token: result.token,
-					deviceId: await biometricManager().biometricDeviceId.value,
+					deviceId: biometricManager().biometricDeviceId.value,
 					message: 'Биометрия пройдена',
+					token: result.token,
 				};
 			} catch (error) {
-				alert('Ошибка биометрии: ' + (error as NuxtError).message);
+				popup().showAlert('Ошибка биометрии: ' + (error as NuxtError).message);
 				isBiometricSuccess.value = false;
 				console.error('Ошибка биометрии:', (error as NuxtError).message);
 				return {
@@ -201,7 +246,7 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 		}
 
 		// Если версия не поддерживает биометрию, просто пропускаем этот шаг
-		alert('Биометрия не поддерживается в данной версии');
+		popup().showAlert('Биометрия не поддерживается в данной версии');
 		isBiometricSuccess.value = true;
 		return { ok: true, message: 'Биометрия не поддерживается в данной версии' };
 	};
@@ -222,7 +267,9 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 				break;
 			case 4:
 				if (
-					webAppData.value && webAppData.value.version > '7.2'
+					webAppData.value &&
+					(webAppData.value.platform.toLowerCase() === 'android' ||
+						webAppData.value.platform.toLowerCase() === 'ios')
 						? isBiometricSuccess.value
 						: (isBiometricSuccess.value = true)
 				) {
@@ -306,9 +353,51 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 		order.value.length > 0 && !showOrder.value ? 'Заказать' : 'Оформить'
 	);
 
-	const updateContactData = (data: IContactData, key: keyof IContactData) => {
-		contactData.value[key] = data[key] as string;
+	const updateContactData = computed(
+		() => (data: IContactData, key: keyof IContactData) => {
+			contactData.value[key] = data[key] as string;
+			return;
+		}
+	);
+
+	const handleUseQr = () => {
+		qrFlag.value = true;
+		setTimeout(() => (qrFlag.value = false), 5000);
 	};
+
+	const onDecode = (data: string) => {
+		if (data) {
+			useQr().closeScanQrPopup();
+
+			if (data.startsWith('http')) {
+				window.location.href = data;
+			} else {
+				popup().showAlert(`Отсканирован QR-код: ${data}`);
+			}
+		}
+	};
+
+	const validateFields = (data: IContactData) => {
+		const addressRule =
+			data.address && /^[а-яА-ЯёË.,\/\w\s-]+$/g.test(data.address);
+		const firstNameRule = /^[а-яА-ЯёËa-zA-Z]+$/g.test(data.first_name);
+		const lastNameRule = /^[а-яА-ЯёËa-zA-Z]+$/g.test(data.last_name);
+		const phoneRule = /^[\d*]+$/g.test(data.phone_number);
+
+		!data.address ||
+		!addressRule ||
+		!(data.address.length && data.address.length > 10) ||
+		!data.first_name ||
+		!firstNameRule ||
+		!data.last_name ||
+		!lastNameRule ||
+		!data.phone_number ||
+		!phoneRule
+			? (isDisabled.value = true)
+			: (isDisabled.value = false);
+		return !isDisabled.value;
+	};
+
 	return {
 		DADATA_TOKEN,
 		authBiometric,
@@ -337,5 +426,11 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 		isBiometricSupported,
 		isBiometricInited,
 		enableScroll,
+		handleUseQr,
+		onDecode,
+		qrFlag,
+		theme,
+		onBioAuth,
+		validateFields,
 	};
 });

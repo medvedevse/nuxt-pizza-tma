@@ -11,7 +11,7 @@ const { authBiometric } = useTgWebAppStore();
 </script>
 
 <template>
-	<BiometricManager @init="async () => await authBiometric()">
+	<BiometricManager @init="authBiometric">
 		<template
 			#loading
 			v-if="!isBiometricInited"

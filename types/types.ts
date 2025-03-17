@@ -5,6 +5,8 @@ export type Requests = typeof import('vue-tg').useWebAppRequests;
 export type BiometricManager =
 	typeof import('vue-tg').useWebAppBiometricManager;
 export type FullScreen = typeof import('vue-tg').useWebAppHapticFeedback;
+export type UseQR = typeof import('vue-tg').useWebAppQrScanner;
+export type Theme = typeof import('vue-tg').useWebAppTheme;
 
 export interface IContactsProps {
 	contactData: IContactData;

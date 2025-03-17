@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { pizzas } from '~/data/mock';
 
-const { MainButton, ClosingConfirmation, useWebAppTheme, useWebApp } =
-	await import('vue-tg');
+const { MainButton, ClosingConfirmation, ScanQr } = await import('vue-tg');
 
 const {
 	toggleDarkMode,
@@ -10,6 +9,8 @@ const {
 	updateOrder,
 	closeModal,
 	orderProcess,
+	handleUseQr,
+	onDecode,
 } = useTgWebAppStore();
 const {
 	contactData,
@@ -21,9 +22,10 @@ const {
 	mainButtonText,
 	isDisabled,
 	isBiometricSuccess,
+	qrFlag,
+	theme,
 } = storeToRefs(useTgWebAppStore());
 
-const theme = useWebAppTheme().colorScheme;
 darkMode.value = theme.value === 'dark' ? true : false;
 </script>
 <template>
@@ -31,6 +33,7 @@ darkMode.value = theme.value === 'dark' ? true : false;
 		<div class="p-4 bg-tg-background dark:bg-gray-600 min-h-screen">
 			<Header
 				:darkMode="darkMode"
+				@use-qr="handleUseQr"
 				@toggle-dark-mode="toggleDarkMode"
 				@open-modal="openOrderModal"
 				:contactData="contactData"
@@ -72,12 +75,16 @@ darkMode.value = theme.value === 'dark' ? true : false;
 		<MainButton
 			:text="mainButtonText"
 			@click="orderProcess(orderStep)"
-			:visible="order.length > 0 && orderStep !== 4"
+			:visible="order && order.length > 0 && orderStep !== 4"
 			:color="darkMode ? `#5f9ea0` : `#008b8b`"
 			textColor="#f0ffff"
 			:disabled="orderStep === 2 && isDisabled"
 		/>
 		<BiometricManager v-if="!isBiometricSuccess && orderStep === 3" />
+		<ScanQr
+			v-if="qrFlag"
+			@result="onDecode"
+		/>
 		<ClosingConfirmation />
 	</div>
 </template>
