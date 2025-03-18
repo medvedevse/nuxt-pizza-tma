@@ -434,8 +434,8 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 		return new Promise(resolve => {
 			timeoutId = setTimeout(() => {
 				qrFlag.value = false;
+				resolve(timeoutId);
 			}, 5000);
-			resolve(timeoutId);
 		});
 	};
 
