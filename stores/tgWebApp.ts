@@ -430,8 +430,10 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 
 	const handleUseQr = () => {
 		qrFlag.value = true;
-		const timeout = setTimeout(() => (qrFlag.value = false), 5000);
-		clearTimeout(timeout);
+		const timeout = setTimeout(() => {
+			qrFlag.value = false;
+			clearTimeout(timeout);
+		}, 5000);
 	};
 
 	const onDecode = (data: string) => {
