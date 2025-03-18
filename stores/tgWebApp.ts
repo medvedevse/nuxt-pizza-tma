@@ -440,6 +440,7 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 	};
 
 	const handleUseQr = () => {
+		qrFlag.value = true;
 		handleUseQrTimeout().then(
 			result => result && clearTimeout(result as string | number)
 		);
