@@ -316,9 +316,6 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 	const orderProcess = async (step: number) => {
 		step++;
 		await getFullScreen().impactOccurred('heavy');
-		const savedBioSuccess = await cloudStorage().getStorageItem(
-			'biometricSuccess'
-		);
 		switch (step) {
 			case 1:
 				openOrderModal();
@@ -344,7 +341,7 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 						? isBiometricSuccess.value
 						: (isBiometricSuccess.value = true)
 				) {
-					orderStep.value++;
+					orderStep.value === 3 && orderStep.value++;
 					const savedOrderNumber = await cloudStorage().getStorageItem(
 						'orderNumber'
 					);

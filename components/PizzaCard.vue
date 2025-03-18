@@ -39,7 +39,7 @@ watch(
 		<img
 			:src="image"
 			alt="Pizza"
-			class="w-full object-cover mb-4 rounded-t-lg min-h-[180px]"
+			class="w-full object-cover mb-4 rounded-t-lg h-[160px]"
 			loading="lazy"
 		/>
 		<h2 class="text-lg font-bold mb-2 text-black dark:text-white">
