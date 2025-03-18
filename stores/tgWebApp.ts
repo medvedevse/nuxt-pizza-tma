@@ -37,6 +37,8 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 		unsafe: '',
 	});
 
+	let timeoutId: NodeJS.Timeout;
+
 	const pizzas = ref<IPizza[]>();
 	const isLoading = ref<boolean>(false);
 	const isError = ref<boolean>(false);
@@ -428,12 +430,16 @@ export const useTgWebAppStore = defineStore('tgWebAppStore', () => {
 		}
 	);
 
-	const handleUseQr = () => {
-		qrFlag.value = true;
-		const timeout = setTimeout(() => {
+	const handleUseQRTimeout = () => {
+		timeoutId = setTimeout(() => {
 			qrFlag.value = false;
-			clearTimeout(timeout);
 		}, 5000);
+	};
+
+	const handleUseQr = () => {
+		timeoutId && clearTimeout(timeoutId);
+		handleUseQRTimeout();
+		qrFlag.value = true;
 	};
 
 	const onDecode = (data: string) => {
