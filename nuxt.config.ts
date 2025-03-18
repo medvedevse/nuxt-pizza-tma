@@ -33,6 +33,7 @@ export default defineNuxtConfig({
 
 	runtimeConfig: {
 		telegramBotToken: import.meta.env.VITE_TELEGRAM_BOT_TOKEN,
+		baseApiUrl: import.meta.env.VITE_API_BASE_URL,
 	},
 
 	modules: ['@pinia/nuxt'],
